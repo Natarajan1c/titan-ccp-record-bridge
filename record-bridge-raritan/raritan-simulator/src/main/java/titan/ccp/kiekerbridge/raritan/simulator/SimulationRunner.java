@@ -192,7 +192,7 @@ public class SimulationRunner {
             FunctionBuilder.of(x -> 5) // NOCS
                 .plusScaled(60, Functions.squares(1 * 60_000, 12 * 60_000, 19 * 60_000)) // NOCS
                 .plus(Functions.noise(10)).build()), // NOCS
-        new SimulatedSensor("fan1", Duration.ofSeconds(10), // NOCS
+        new SimulatedSensor("fan1", Duration.ofSeconds(3), // NOCS
             FunctionBuilder.of(x -> 30).plus(Functions.wave2()).plus(Functions.noise(5)).build()), // NOCS
         new SimulatedSensor("ac1", Duration.ofSeconds(1), // NOCS
             FunctionBuilder.of(Functions.wave3()).plus(Functions.noise(5)).build()), // NOCS
