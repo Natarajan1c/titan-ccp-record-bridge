@@ -128,7 +128,7 @@ public class SimulationRunner {
   }
 
   public static <T> T getOrDefault(final T value, final T defaultValue) {
-    return value != null ? value : defaultValue;
+    return value == null ? defaultValue : value;
   }
 
 }
