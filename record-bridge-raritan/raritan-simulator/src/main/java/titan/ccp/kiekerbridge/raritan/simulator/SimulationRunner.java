@@ -9,16 +9,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import org.apache.commons.configuration2.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import titan.ccp.common.configuration.Configurations;
 
 /**
  * Runs a simulation by setting up simulated sensors, reading data from them and pushing them to a
  * destination.
  */
 public class SimulationRunner {
+
+  private static final String DEFAULT_PUSH_ADDRESS = "http://localhost:8080/raritan";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SimulationRunner.class);
 
@@ -75,23 +75,17 @@ public class SimulationRunner {
     // Turn off Java's DNS caching
     java.security.Security.setProperty("networkaddress.cache.ttl", "0"); // TODO
 
-    final Configuration configuration = Configurations.create();
-    final String setupType = configuration.getString("setup", "demo"); // NOCS
-    if (setupType != "demo") {
-      throw new IllegalArgumentException(
-          "Different execution modes (setups) are no longer supported.");
-    }
-
-    LOGGER.info("Start Simulator");
-    final URI pushUri = URI.create(configuration.getString("kieker.bridge.address"));
-    new SimulationRunner(pushUri, getDemoSetup()).run();
+    LOGGER.info("Start Simulator.");
+    final URI pushUri =
+        URI.create(getOrDefault(System.getenv("kieker.bridge.address"), DEFAULT_PUSH_ADDRESS));
+    new SimulationRunner(pushUri, createSimulatedSensor()).run();
 
   }
 
   /**
-   * Get simulated sensors for a demo setup.
+   * Construct list of {@link SimulatedSensor}s.
    */
-  public static List<SimulatedSensor> getDemoSetup() {
+  public static List<SimulatedSensor> createSimulatedSensor() {
     return List.of(
         new SimulatedSensor(
             "server1",
@@ -131,6 +125,10 @@ public class SimulationRunner {
             "ac2",
             Duration.ofSeconds(1), // NOCS
             FunctionBuilder.of(Functions.wave3()).plus(Functions.noise(5)).build())); // NOCS
+  }
+
+  public static <T> T getOrDefault(final T value, final T defaultValue) {
+    return value != null ? value : defaultValue;
   }
 
 }
