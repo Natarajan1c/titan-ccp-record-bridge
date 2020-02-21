@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SimulationRunner {
 
+  private static final String PUSH_ADDRESS_ENV_NAME = "PUSH_ADDRESS";
   private static final String DEFAULT_PUSH_ADDRESS = "http://localhost:8080/raritan";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SimulationRunner.class);
@@ -77,7 +78,7 @@ public class SimulationRunner {
 
     LOGGER.info("Start Simulator.");
     final URI pushUri =
-        URI.create(getOrDefault(System.getenv("kieker.bridge.address"), DEFAULT_PUSH_ADDRESS));
+        URI.create(getOrDefault(System.getenv(PUSH_ADDRESS_ENV_NAME), DEFAULT_PUSH_ADDRESS));
     new SimulationRunner(pushUri, createSimulatedSensor()).run();
 
   }

@@ -9,7 +9,7 @@ This directory contains a tool to simulate Raritan power distribution units.
 
 ## Usage
 
-The URL power measurements are sent to has to be configured via a Java property file's parameter `kieker.bridge.address` or via the environment variable `KIEKER_BRIDGE_ADDRESS`.
+The URL power measurements are sent to has to be configured via the environment variable `PUSH_ADDRESS`.
 
 ## Build and Run
 
