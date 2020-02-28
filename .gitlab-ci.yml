@@ -25,8 +25,8 @@ build:
   tags:
     - dockerex
   script: ./gradlew --build-cache assemble
-  #artifacts:
-    #paths:
+  artifacts:
+    paths:
       #- build/libs/*.jar
       #- record-bridge-raritan/build/libs/*.jar
       #- record-bridge-raritan/build/distributions/*.tar
@@ -35,8 +35,8 @@ build:
       #- load-tester-bridge/build/libs/*.jar
       #- load-tester-bridge/build/distributions/*.tar
       #- exp-bigdata19-bridge/build/libs/*.jar
-      #- exp-bigdata19-bridge/build/distributions/*.tar
-    #expire_in: 1 day
+      - exp-bigdata19-bridge/build/distributions/*.tar
+    expire_in: 1 day
 
 test:
   stage: test
