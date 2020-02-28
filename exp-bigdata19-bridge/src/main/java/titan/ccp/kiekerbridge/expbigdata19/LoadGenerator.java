@@ -27,6 +27,8 @@ public class LoadGenerator {
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("PERIOD_MS"), "1000"));
     final int value =
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("VALUE"), "10"));
+    final int threads =
+        Integer.parseInt(Objects.requireNonNullElse(System.getenv("THREADS"), "4"));
     final String kafkaBootstrapServers =
         Objects.requireNonNullElse(System.getenv("KAFKA_BOOTSTRAP_SERVERS"), "localhost:9092");
     final String kafkaInputTopic =
@@ -65,7 +67,7 @@ public class LoadGenerator {
     final KafkaRecordSender<ActivePowerRecord> kafkaRecordSender = new KafkaRecordSender<>(
         kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp());
 
-    final ScheduledExecutorService executor = Executors.newScheduledThreadPool(4);
+    final ScheduledExecutorService executor = Executors.newScheduledThreadPool(threads);
     final Random random = new Random();
 
     for (final String sensor : sensors) {
