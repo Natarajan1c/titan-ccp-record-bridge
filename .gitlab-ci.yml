@@ -27,14 +27,14 @@ build:
   script: ./gradlew --build-cache assemble
   artifacts:
     paths:
-      - build/libs/*.jar
-      - record-bridge-raritan/build/libs/*.jar
-      - record-bridge-raritan/build/distributions/*.tar
-      - record-bridge-raritan/raritan-simulator/build/libs/*.jar
-      - record-bridge-raritan/raritan-simulator/build/distributions/*.tar
-      - load-tester-bridge/build/libs/*.jar
-      - load-tester-bridge/build/distributions/*.tar
-      - exp-bigdata19-bridge/build/libs/*.jar
+      #- build/libs/*.jar
+      #- record-bridge-raritan/build/libs/*.jar
+      #- record-bridge-raritan/build/distributions/*.tar
+      #- record-bridge-raritan/raritan-simulator/build/libs/*.jar
+      #- record-bridge-raritan/raritan-simulator/build/distributions/*.tar
+      #- load-tester-bridge/build/libs/*.jar
+      #- load-tester-bridge/build/distributions/*.tar
+      #- exp-bigdata19-bridge/build/libs/*.jar
       - exp-bigdata19-bridge/build/distributions/*.tar
     expire_in: 1 day
 
