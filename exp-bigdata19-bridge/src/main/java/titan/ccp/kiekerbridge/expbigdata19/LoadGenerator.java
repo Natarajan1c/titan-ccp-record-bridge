@@ -3,6 +3,7 @@ package titan.ccp.kiekerbridge.expbigdata19;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,6 +34,9 @@ public class LoadGenerator {
         Objects.requireNonNullElse(System.getenv("KAFKA_BOOTSTRAP_SERVERS"), "localhost:9092");
     final String kafkaInputTopic =
         Objects.requireNonNullElse(System.getenv("KAFKA_INPUT_TOPIC"), "input");
+    final String kafkaBatchSize = System.getenv("KAFKA_BATCH_SIZE");
+    final String kafkaLingerMs = System.getenv("KAFKA_LINGER_MS");
+    final String kafkaBatchMemory = System.getenv("KAFKA_BATCH_MEMORY");
 
     final MutableSensorRegistry sensorRegistry = new MutableSensorRegistry("group_lvl_0");
     if (hierarchy.equals("deep")) {
@@ -64,8 +68,14 @@ public class LoadGenerator {
     System.out.println("And woke up again :)");
 
 
+    final Properties kafkaProperties = new Properties();
+    // kafkaProperties.put("acks", this.acknowledges);
+    kafkaProperties.compute("batch.size", (k, v) -> kafkaBatchSize);
+    kafkaProperties.compute("linger.ms", (k, v) -> kafkaLingerMs);
+    kafkaProperties.compute("batch.memory", (k, v) -> kafkaBatchMemory);
     final KafkaRecordSender<ActivePowerRecord> kafkaRecordSender = new KafkaRecordSender<>(
-        kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp());
+        kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp(),
+        kafkaProperties);
 
     final ScheduledExecutorService executor = Executors.newScheduledThreadPool(threads);
     final Random random = new Random();
