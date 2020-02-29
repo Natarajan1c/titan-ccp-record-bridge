@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import titan.ccp.configuration.events.Event;
 import titan.ccp.kiekerbridge.KafkaRecordSender;
 import titan.ccp.model.sensorregistry.MutableAggregatedSensor;
@@ -36,7 +37,7 @@ public class LoadGenerator {
         Objects.requireNonNullElse(System.getenv("KAFKA_INPUT_TOPIC"), "input");
     final String kafkaBatchSize = System.getenv("KAFKA_BATCH_SIZE");
     final String kafkaLingerMs = System.getenv("KAFKA_LINGER_MS");
-    final String kafkaBatchMemory = System.getenv("KAFKA_BATCH_MEMORY");
+    final String kafkaBufferMemory = System.getenv("KAFKA_BUFFER_MEMORY");
 
     final MutableSensorRegistry sensorRegistry = new MutableSensorRegistry("group_lvl_0");
     if (hierarchy.equals("deep")) {
@@ -70,9 +71,9 @@ public class LoadGenerator {
 
     final Properties kafkaProperties = new Properties();
     // kafkaProperties.put("acks", this.acknowledges);
-    kafkaProperties.compute("batch.size", (k, v) -> kafkaBatchSize);
-    kafkaProperties.compute("linger.ms", (k, v) -> kafkaLingerMs);
-    kafkaProperties.compute("batch.memory", (k, v) -> kafkaBatchMemory);
+    kafkaProperties.compute(ProducerConfig.BATCH_SIZE_CONFIG, (k, v) -> kafkaBatchSize);
+    kafkaProperties.compute(ProducerConfig.LINGER_MS_CONFIG, (k, v) -> kafkaLingerMs);
+    kafkaProperties.compute(ProducerConfig.BUFFER_MEMORY_CONFIG, (k, v) -> kafkaBufferMemory);
     final KafkaRecordSender<ActivePowerRecord> kafkaRecordSender = new KafkaRecordSender<>(
         kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp(),
         kafkaProperties);

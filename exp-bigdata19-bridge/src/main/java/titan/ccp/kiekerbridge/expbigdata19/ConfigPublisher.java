@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import titan.ccp.configuration.events.Event;
@@ -25,9 +26,9 @@ public class ConfigPublisher {
 
     final Properties properties = new Properties();
     properties.putAll(defaultProperties);
-    properties.put("bootstrap.servers", bootstrapServers);
-    properties.put("max.request.size", "134217728"); // 128 MB
-    properties.put("buffer.memory", "134217728"); // 128 MB
+    properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    properties.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, "134217728"); // 128 MB
+    properties.put(ProducerConfig.BUFFER_MEMORY_CONFIG, "134217728"); // 128 MB
 
     this.producer =
         new KafkaProducer<>(properties, EventSerde.serializer(), new StringSerializer());
