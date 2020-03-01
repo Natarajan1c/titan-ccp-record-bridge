@@ -25,6 +25,8 @@ public class LoadGeneratorExtrem {
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("VALUE"), "10"));
     final boolean sendRegistry =
         Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("SEND_REGISTRY"), "true"));
+    final int threads =
+        Integer.parseInt(Objects.requireNonNullElse(System.getenv("THREADS"), "1"));
     final String kafkaBootstrapServers =
         Objects.requireNonNullElse(System.getenv("KAFKA_BOOTSTRAP_SERVERS"), "localhost:9092");
     final String kafkaInputTopic =
@@ -74,15 +76,22 @@ public class LoadGeneratorExtrem {
         kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp(),
         kafkaProperties);
 
-    while (true) {
-      for (final String sensor : sensors) {
-        kafkaRecordSender.write(new ActivePowerRecord(
-            sensor,
-            System.currentTimeMillis(),
-            value));
-      }
+    for (int i = 0; i < threads; i++) {
+      new Thread(() -> {
+        while (true) {
+          for (final String sensor : sensors) {
+            kafkaRecordSender.write(new ActivePowerRecord(
+                sensor,
+                System.currentTimeMillis(),
+                value));
+          }
+        }
+      }).start();
     }
 
+    System.out.println("Wait for termination...");
+    Thread.sleep(30 * 24 * 60 * 60 * 1000);
+    System.out.println("Will terminate now");
   }
 
   private static int addChildren(final MutableAggregatedSensor parent, final int numChildren,
