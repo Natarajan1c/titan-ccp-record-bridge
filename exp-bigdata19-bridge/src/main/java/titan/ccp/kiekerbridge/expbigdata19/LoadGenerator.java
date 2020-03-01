@@ -29,6 +29,8 @@ public class LoadGenerator {
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("PERIOD_MS"), "1000"));
     final int value =
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("VALUE"), "10"));
+    final boolean sendRegistry =
+        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("SEND_REGISTRY"), "true"));
     final int threads =
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("THREADS"), "4"));
     final String kafkaBootstrapServers =
@@ -58,15 +60,17 @@ public class LoadGenerator {
         sensorRegistry.getMachineSensors().stream().map(s -> s.getIdentifier())
             .collect(Collectors.toList());
 
-    final ConfigPublisher configPublisher =
-        new ConfigPublisher(kafkaBootstrapServers, "configuration");
-    configPublisher.publish(Event.SENSOR_REGISTRY_CHANGED, sensorRegistry.toJson());
-    configPublisher.close();
-    System.out.println("Configuration sent.");
+    if (sendRegistry) {
+      final ConfigPublisher configPublisher =
+          new ConfigPublisher(kafkaBootstrapServers, "configuration");
+      configPublisher.publish(Event.SENSOR_REGISTRY_CHANGED, sensorRegistry.toJson());
+      configPublisher.close();
+      System.out.println("Configuration sent.");
 
-    System.out.println("Now wait 30 seconds");
-    Thread.sleep(30_000);
-    System.out.println("And woke up again :)");
+      System.out.println("Now wait 30 seconds");
+      Thread.sleep(30_000);
+      System.out.println("And woke up again :)");
+    }
 
 
     final Properties kafkaProperties = new Properties();
