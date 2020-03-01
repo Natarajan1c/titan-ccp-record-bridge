@@ -90,7 +90,7 @@ public class LoadGeneratorExtrem {
     }
 
     System.out.println("Wait for termination...");
-    Thread.sleep(30 * 24 * 60 * 60 * 1000);
+    Thread.sleep(30 * 24 * 60 * 60 * 1000L);
     System.out.println("Will terminate now");
   }
 
