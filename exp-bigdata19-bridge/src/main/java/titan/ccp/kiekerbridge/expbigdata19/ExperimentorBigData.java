@@ -11,6 +11,8 @@ public class ExperimentorBigData {
 
     if (modus.equals("LoadGenerator")) {
       LoadGenerator.main(args);
+    } else if (modus.equals("LoadGeneratorExtrem")) {
+      LoadGeneratorExtrem.main(args);
     } else if (modus.equals("LoadCounter")) {
       LoadCounter.main(args);
     }
