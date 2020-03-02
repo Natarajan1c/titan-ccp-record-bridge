@@ -24,11 +24,11 @@ public class LoadGeneratorExtrem {
     final int value =
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("VALUE"), "10"));
     final boolean sendRegistry =
-        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("SEND_REGISTRY"), "false"));
+        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("SEND_REGISTRY"), "true"));
     final boolean doNothing =
-        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("DO_NOTHING"), "true"));
+        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("DO_NOTHING"), "false"));
     final int threads =
-        Integer.parseInt(Objects.requireNonNullElse(System.getenv("THREADS"), "1"));
+        Integer.parseInt(Objects.requireNonNullElse(System.getenv("THREADS"), "4"));
     final String kafkaBootstrapServers =
         Objects.requireNonNullElse(System.getenv("KAFKA_BOOTSTRAP_SERVERS"), "localhost:9092");
     final String kafkaInputTopic =
