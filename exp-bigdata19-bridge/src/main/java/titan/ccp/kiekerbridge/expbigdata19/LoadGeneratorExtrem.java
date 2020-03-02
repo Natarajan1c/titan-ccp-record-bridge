@@ -122,7 +122,8 @@ public class LoadGeneratorExtrem {
       final long cpuTime = tmxb.getThreadCpuTime(thread.getId());
       final long dur = System.nanoTime() - start;
       final double util = (double) dur / cpuTime;
-      System.out.println("Thread " + thread.getName() + ": " + util);
+      System.out.println(
+          "Thread " + thread.getName() + ": " + String.format(java.util.Locale.US, "%.4f", util));
     }
   }
 
