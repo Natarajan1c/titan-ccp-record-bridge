@@ -1,9 +1,12 @@
 package titan.ccp.kiekerbridge.expbigdata19;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -92,9 +95,23 @@ public class LoadGeneratorExtrem {
       }).start();
     }
 
-    System.out.println("Wait for termination...");
-    Thread.sleep(30 * 24 * 60 * 60 * 1000L);
-    System.out.println("Will terminate now");
+    while (true) {
+      printCpuUsagePerThread();
+      Thread.sleep(1000);
+    }
+
+    // System.out.println("Wait for termination...");
+    // Thread.sleep(30 * 24 * 60 * 60 * 1000L);
+    // System.out.println("Will terminate now");
+  }
+
+  private static void printCpuUsagePerThread() {
+    final ThreadMXBean tmxb = ManagementFactory.getThreadMXBean();
+    final Set<Thread> keySet = Thread.getAllStackTraces().keySet();
+    for (final Thread thread : keySet) {
+      final long cpuTime = tmxb.getThreadCpuTime(thread.getId());
+      System.out.println("Thread " + thread.getName() + ": " + cpuTime);
+    }
   }
 
   private static SensorRegistry buildSensorRegistry(final String hierarchy,
