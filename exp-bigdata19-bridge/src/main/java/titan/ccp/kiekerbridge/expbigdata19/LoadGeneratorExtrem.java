@@ -97,7 +97,6 @@ public class LoadGeneratorExtrem {
 
     while (true) {
       printCpuUsagePerThread();
-      Thread.sleep(1000);
     }
 
     // System.out.println("Wait for termination...");
@@ -105,12 +104,16 @@ public class LoadGeneratorExtrem {
     // System.out.println("Will terminate now");
   }
 
-  private static void printCpuUsagePerThread() {
+  private static void printCpuUsagePerThread() throws InterruptedException {
+    final long start = System.currentTimeMillis();
+    Thread.sleep(1000);
     final ThreadMXBean tmxb = ManagementFactory.getThreadMXBean();
     final Set<Thread> keySet = Thread.getAllStackTraces().keySet();
     for (final Thread thread : keySet) {
       final long cpuTime = tmxb.getThreadCpuTime(thread.getId());
-      System.out.println("Thread " + thread.getName() + ": " + cpuTime);
+      final long dur = System.currentTimeMillis() - start;
+      final double util = (double) dur / cpuTime;
+      System.out.println("Thread " + thread.getName() + ": " + util);
     }
   }
 
