@@ -25,6 +25,8 @@ public class LoadGeneratorExtrem {
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("VALUE"), "10"));
     final boolean sendRegistry =
         Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("SEND_REGISTRY"), "true"));
+    final boolean doNothing =
+        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("DO_NOTHING"), "false"));
     final int threads =
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("THREADS"), "1"));
     final String kafkaBootstrapServers =
@@ -80,10 +82,12 @@ public class LoadGeneratorExtrem {
       new Thread(() -> {
         while (true) {
           for (final String sensor : sensors) {
-            kafkaRecordSender.write(new ActivePowerRecord(
-                sensor,
-                System.currentTimeMillis(),
-                value));
+            if (!doNothing) {
+              kafkaRecordSender.write(new ActivePowerRecord(
+                  sensor,
+                  System.currentTimeMillis(),
+                  value));
+            }
           }
         }
       }).start();
