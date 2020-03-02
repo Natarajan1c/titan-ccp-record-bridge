@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import titan.ccp.configuration.events.Event;
 import titan.ccp.kiekerbridge.KafkaRecordSender;
 import titan.ccp.model.sensorregistry.MutableAggregatedSensor;
 import titan.ccp.model.sensorregistry.MutableSensorRegistry;
+import titan.ccp.model.sensorregistry.SensorRegistry;
 import titan.ccp.models.records.ActivePowerRecord;
 
 public class LoadGeneratorExtrem {
@@ -29,6 +31,8 @@ public class LoadGeneratorExtrem {
         Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("DO_NOTHING"), "false"));
     final int threads =
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("THREADS"), "4"));
+    final int producers =
+        Integer.parseInt(Objects.requireNonNullElse(System.getenv("PRODUCERS"), "1"));
     final String kafkaBootstrapServers =
         Objects.requireNonNullElse(System.getenv("KAFKA_BOOTSTRAP_SERVERS"), "localhost:9092");
     final String kafkaInputTopic =
@@ -37,6 +41,64 @@ public class LoadGeneratorExtrem {
     final String kafkaLingerMs = System.getenv("KAFKA_LINGER_MS");
     final String kafkaBufferMemory = System.getenv("KAFKA_BUFFER_MEMORY");
 
+    final SensorRegistry sensorRegistry =
+        buildSensorRegistry(hierarchy, numNestedGroups, numSensor);
+
+    if (sendRegistry) {
+      final ConfigPublisher configPublisher =
+          new ConfigPublisher(kafkaBootstrapServers, "configuration");
+      configPublisher.publish(Event.SENSOR_REGISTRY_CHANGED, sensorRegistry.toJson());
+      configPublisher.close();
+      System.out.println("Configuration sent.");
+
+      System.out.println("Now wait 30 seconds");
+      Thread.sleep(30_000);
+      System.out.println("And woke up again :)");
+    }
+
+    final Properties kafkaProperties = new Properties();
+    // kafkaProperties.put("acks", this.acknowledges);
+    kafkaProperties.compute(ProducerConfig.BATCH_SIZE_CONFIG, (k, v) -> kafkaBatchSize);
+    kafkaProperties.compute(ProducerConfig.LINGER_MS_CONFIG, (k, v) -> kafkaLingerMs);
+    kafkaProperties.compute(ProducerConfig.BUFFER_MEMORY_CONFIG, (k, v) -> kafkaBufferMemory);
+    final List<KafkaRecordSender<ActivePowerRecord>> kafkaRecordSenders = Stream
+        .<KafkaRecordSender<ActivePowerRecord>>generate(
+            () -> new KafkaRecordSender<>(
+                kafkaBootstrapServers,
+                kafkaInputTopic,
+                r -> r.getIdentifier(),
+                r -> r.getTimestamp(),
+                kafkaProperties))
+        .limit(producers)
+        .collect(Collectors.toList());
+
+    final List<String> sensors =
+        sensorRegistry.getMachineSensors().stream().map(s -> s.getIdentifier())
+            .collect(Collectors.toList());
+
+    for (int i = 0; i < threads; i++) {
+      final int threadId = i;
+      new Thread(() -> {
+        while (true) {
+          for (final String sensor : sensors) {
+            if (!doNothing) {
+              kafkaRecordSenders.get(threadId % producers).write(new ActivePowerRecord(
+                  sensor,
+                  System.currentTimeMillis(),
+                  value));
+            }
+          }
+        }
+      }).start();
+    }
+
+    System.out.println("Wait for termination...");
+    Thread.sleep(30 * 24 * 60 * 60 * 1000L);
+    System.out.println("Will terminate now");
+  }
+
+  private static SensorRegistry buildSensorRegistry(final String hierarchy,
+      final int numNestedGroups, final int numSensor) {
     final MutableSensorRegistry sensorRegistry = new MutableSensorRegistry("group_lvl_0");
     if (hierarchy.equals("deep")) {
       MutableAggregatedSensor lastSensor = sensorRegistry.getTopLevelSensor();
@@ -51,62 +113,7 @@ public class LoadGeneratorExtrem {
     } else {
       throw new IllegalStateException();
     }
-
-    final List<String> sensors =
-        sensorRegistry.getMachineSensors().stream().map(s -> s.getIdentifier())
-            .collect(Collectors.toList());
-
-    if (sendRegistry) {
-      final ConfigPublisher configPublisher =
-          new ConfigPublisher(kafkaBootstrapServers, "configuration");
-      configPublisher.publish(Event.SENSOR_REGISTRY_CHANGED, sensorRegistry.toJson());
-      configPublisher.close();
-      System.out.println("Configuration sent.");
-
-      System.out.println("Now wait 30 seconds");
-      Thread.sleep(30_000);
-      System.out.println("And woke up again :)");
-    }
-
-
-    final Properties kafkaProperties = new Properties();
-    // kafkaProperties.put("acks", this.acknowledges);
-    kafkaProperties.compute(ProducerConfig.BATCH_SIZE_CONFIG, (k, v) -> kafkaBatchSize);
-    kafkaProperties.compute(ProducerConfig.LINGER_MS_CONFIG, (k, v) -> kafkaLingerMs);
-    kafkaProperties.compute(ProducerConfig.BUFFER_MEMORY_CONFIG, (k, v) -> kafkaBufferMemory);
-    final KafkaRecordSender<ActivePowerRecord> kafkaRecordSender = new KafkaRecordSender<>(
-        kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp(),
-        kafkaProperties);
-    final KafkaRecordSender<ActivePowerRecord> kafkaRecordSender2 = new KafkaRecordSender<>(
-        kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp(),
-        kafkaProperties);
-
-    for (int i = 0; i < threads; i++) {
-      final int threadId = i;
-      new Thread(() -> {
-        while (true) {
-          for (final String sensor : sensors) {
-            if (!doNothing) {
-              if (threadId % 2 == 0) {
-                kafkaRecordSender.write(new ActivePowerRecord(
-                    sensor,
-                    System.currentTimeMillis(),
-                    value));
-              } else {
-                kafkaRecordSender2.write(new ActivePowerRecord(
-                    sensor,
-                    System.currentTimeMillis(),
-                    value));
-              }
-            }
-          }
-        }
-      }).start();
-    }
-
-    System.out.println("Wait for termination...");
-    Thread.sleep(30 * 24 * 60 * 60 * 1000L);
-    System.out.println("Will terminate now");
+    return sensorRegistry;
   }
 
   private static int addChildren(final MutableAggregatedSensor parent, final int numChildren,
