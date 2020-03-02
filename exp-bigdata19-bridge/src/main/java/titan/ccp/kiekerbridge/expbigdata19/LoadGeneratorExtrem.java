@@ -24,9 +24,9 @@ public class LoadGeneratorExtrem {
     final int value =
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("VALUE"), "10"));
     final boolean sendRegistry =
-        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("SEND_REGISTRY"), "true"));
+        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("SEND_REGISTRY"), "false"));
     final boolean doNothing =
-        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("DO_NOTHING"), "false"));
+        Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("DO_NOTHING"), "true"));
     final int threads =
         Integer.parseInt(Objects.requireNonNullElse(System.getenv("THREADS"), "1"));
     final String kafkaBootstrapServers =
@@ -77,16 +77,27 @@ public class LoadGeneratorExtrem {
     final KafkaRecordSender<ActivePowerRecord> kafkaRecordSender = new KafkaRecordSender<>(
         kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp(),
         kafkaProperties);
+    final KafkaRecordSender<ActivePowerRecord> kafkaRecordSender2 = new KafkaRecordSender<>(
+        kafkaBootstrapServers, kafkaInputTopic, r -> r.getIdentifier(), r -> r.getTimestamp(),
+        kafkaProperties);
 
     for (int i = 0; i < threads; i++) {
+      final int threadId = i;
       new Thread(() -> {
         while (true) {
           for (final String sensor : sensors) {
             if (!doNothing) {
-              kafkaRecordSender.write(new ActivePowerRecord(
-                  sensor,
-                  System.currentTimeMillis(),
-                  value));
+              if (threadId % 2 == 0) {
+                kafkaRecordSender.write(new ActivePowerRecord(
+                    sensor,
+                    System.currentTimeMillis(),
+                    value));
+              } else {
+                kafkaRecordSender2.write(new ActivePowerRecord(
+                    sensor,
+                    System.currentTimeMillis(),
+                    value));
+              }
             }
           }
         }
