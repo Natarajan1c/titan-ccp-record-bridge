@@ -3,10 +3,10 @@ package titan.ccp.kiekerbridge.expbigdata19;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -105,13 +105,22 @@ public class LoadGeneratorExtrem {
   }
 
   private static void printCpuUsagePerThread() throws InterruptedException {
-    final long start = System.currentTimeMillis();
-    Thread.sleep(1000);
     final ThreadMXBean tmxb = ManagementFactory.getThreadMXBean();
-    final Set<Thread> keySet = Thread.getAllStackTraces().keySet();
-    for (final Thread thread : keySet) {
+    final List<Thread> threads = new ArrayList<>(Thread.getAllStackTraces().keySet());
+
+    final long start = System.nanoTime();
+    final long[] startCpuTimes = new long[threads.size()];
+    for (int i = 0; i < threads.size(); i++) {
+      final Thread thread = threads.get(i);
+      startCpuTimes[i] = tmxb.getThreadCpuTime(thread.getId());
+    }
+
+    Thread.sleep(5000);
+
+    for (int i = 0; i < threads.size(); i++) {
+      final Thread thread = threads.get(i);
       final long cpuTime = tmxb.getThreadCpuTime(thread.getId());
-      final long dur = System.currentTimeMillis() - start;
+      final long dur = System.nanoTime() - start;
       final double util = (double) dur / cpuTime;
       System.out.println("Thread " + thread.getName() + ": " + util);
     }
